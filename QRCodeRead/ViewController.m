@@ -41,24 +41,36 @@
         NSLog(@"QRCode failed: pick image failed");
         return;
     }
-
-    CIImage *ciImage = [pickedImage CIImage];
-    CIDetector *detector = [CIDetector detectorOfType:CIDetectorTypeQRCode
-                                              context:nil
-                                              options:@{CIDetectorAccuracy: CIDetectorAccuracyHigh}];
-    NSArray *features = [detector featuresInImage:ciImage];
+    
+    CIImage *ciImage = [[CIImage alloc] initWithImage:pickedImage];
+    NSDictionary *options;
+    CIContext *context = [CIContext context];
+    options = @{CIDetectorAccuracy: CIDetectorAccuracyHigh};
+    
+    CIDetector *qrDetector = [CIDetector detectorOfType:CIDetectorTypeQRCode
+                                                context:context
+                                                options:options];
+    if ([[ciImage properties] valueForKey:(NSString *) kCGImagePropertyOrientation] == nil) {
+        options = @{CIDetectorImageOrientation: @1};
+        NSLog(@"CIDetectorImageOrientation: @1");
+    }else {
+        options = @{CIDetectorImageOrientation: [[ciImage properties] valueForKey:(NSString *) kCGImagePropertyOrientation]};
+        NSLog(@"CIDetectorImageOrientation: [[ciImage properties] valueForKey:(NSString *) kCGImagePropertyOrientation]");
+    }
+    
+    NSArray *features = [qrDetector featuresInImage:ciImage options:options];
     if (features == nil) {
-        NSLog(@"QRCode failed: no qr code");
+        NSLog(@"QR Code failed: no qr code");
         return;
     }
-
+    
     if (features.count == 0) {
-        //TODO: QR Code decode fail.
-        NSLog(@"QRCode failed: decode fail");
+        NSLog(@"QR Code failed: decode fail");
         return;
     }
-
+    
     CIQRCodeFeature *qrcodeFeature = (CIQRCodeFeature *) features[0];
-    NSLog(@"QRCode feature: %@", qrcodeFeature.messageString);
+    NSLog(@"QR Code feature: %@", qrcodeFeature.messageString);
+
 }
 @end
